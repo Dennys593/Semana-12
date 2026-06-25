@@ -1,0 +1,3 @@
+ID    MARCA           MODELO          TIPO            ESTADO     PRECIO       DISP 
+1     Kia             Sportague       auto            nuevo      12000.00     1    
+2     Toyota          Corrollo        camioneta       usado      8000.00      1    

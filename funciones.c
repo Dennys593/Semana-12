@@ -169,14 +169,38 @@ void leerEstado(char estado[]) {
     } while (validarEstado(estado) == 0);
 }
 
+void escribirEncabezadoVehiculos(FILE *archivo) {
+    fprintf(archivo, "%-5s %-15s %-15s %-15s %-10s %-12s %-5s\n",
+            "ID", "MARCA", "MODELO", "TIPO", "ESTADO", "PRECIO", "DISP");
+}
+
+void escribirVehiculo(FILE *archivo, Vehiculo v) {
+    fprintf(archivo, "%-5d %-15s %-15s %-15s %-10s %-12.2f %-5d\n",
+            v.id, v.marca, v.modelo, v.tipo,
+            v.estado, v.precio, v.disponible);
+}
+
+void escribirEncabezadoVentas(FILE *archivo) {
+    fprintf(archivo, "%-5s %-15s %-15s %-8s %-12s\n",
+            "ID", "CLIENTE", "CEDULA", "EDAD", "PRECIO");
+}
+
+void escribirVenta(FILE *archivo, Cliente c, float precio) {
+    fprintf(archivo, "%-5d %-15s %-15s %-8d %-12.2f\n",
+            c.id, c.nombre, c.cedula, c.edad, precio);
+}
+
 int generarId() {
     FILE *archivo = fopen("vehiculos.txt", "r");
     Vehiculo v;
     int ultimoId = 0;
+    char encabezado[200];
 
     if (archivo == NULL) {
         return 1;
     }
+
+    fgets(encabezado, 200, archivo);
 
     while (fscanf(archivo, "%d %s %s %s %s %f %d",
                   &v.id, v.marca, v.modelo, v.tipo,
@@ -197,6 +221,12 @@ void agregarVehiculo() {
         return;
     }
 
+    fseek(archivo, 0, SEEK_END);
+
+    if (ftell(archivo) == 0) {
+        escribirEncabezadoVehiculos(archivo);
+    }
+
     v.id = generarId();
     v.disponible = 1;
 
@@ -206,9 +236,7 @@ void agregarVehiculo() {
     leerEstado(v.estado);
     v.precio = leerFloat("Precio: ");
 
-    fprintf(archivo, "%d %s %s %s %s %.2f %d\n",
-            v.id, v.marca, v.modelo, v.tipo,
-            v.estado, v.precio, v.disponible);
+    escribirVehiculo(archivo, v);
 
     fclose(archivo);
 
@@ -219,11 +247,14 @@ void listarVehiculos() {
     FILE *archivo = fopen("vehiculos.txt", "r");
     Vehiculo v;
     int hayDatos = 0;
+    char encabezado[200];
 
     if (archivo == NULL) {
         printf("No hay vehiculos registrados.\n");
         return;
     }
+
+    fgets(encabezado, 200, archivo);
 
     printf("\n--- LISTA DE VEHICULOS ---\n");
 
@@ -256,6 +287,7 @@ void buscarVehiculos() {
     char marca[MAX_TEXTO];
     char tipo[MAX_TEXTO];
     char estado[MAX_TEXTO];
+    char encabezado[200];
     float presupuesto;
     int encontrados = 0;
 
@@ -263,6 +295,8 @@ void buscarVehiculos() {
         printf("No hay vehiculos registrados.\n");
         return;
     }
+
+    fgets(encabezado, 200, archivo);
 
     leerTexto("Marca buscada: ", marca, MAX_TEXTO);
     leerTipo(tipo);
@@ -308,6 +342,7 @@ void registrarVenta() {
     Cliente c;
     int idBuscado;
     int encontrado = 0;
+    char encabezado[200];
 
     if (archivo == NULL || temporal == NULL || ventas == NULL) {
         printf("Error al abrir archivos.\n");
@@ -317,6 +352,15 @@ void registrarVenta() {
         if (ventas != NULL) fclose(ventas);
 
         return;
+    }
+
+    fgets(encabezado, 200, archivo);
+    escribirEncabezadoVehiculos(temporal);
+
+    fseek(ventas, 0, SEEK_END);
+
+    if (ftell(ventas) == 0) {
+        escribirEncabezadoVentas(ventas);
     }
 
     idBuscado = leerEntero("Ingrese ID del vehiculo a vender: ");
@@ -340,15 +384,12 @@ void registrarVenta() {
 
             c.id = idBuscado;
 
-                fprintf(ventas, "%d %s %s %d %.2f\n",
-                    c.id, c.nombre, c.cedula, c.edad, v.precio);
+            escribirVenta(ventas, c, v.precio);
 
             printf("Venta registrada correctamente.\n");
         }
 
-        fprintf(temporal, "%d %s %s %s %s %.2f %d\n",
-                v.id, v.marca, v.modelo, v.tipo,
-                v.estado, v.precio, v.disponible);
+        escribirVehiculo(temporal, v);
     }
 
     if (encontrado == 0) {

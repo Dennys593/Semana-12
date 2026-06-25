@@ -1,0 +1,2 @@
+ID    CLIENTE         CEDULA       EDAD  COD_VEND   VENDEDOR        PRECIO       IVA        PAGO_CLIENTE   COMISION  
+4     Andre           1752384303   19    001        Andre           150000.00    22500.00   172500.00      7500.00   

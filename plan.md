@@ -1,80 +1,42 @@
-# Planificación del Proyecto
+# Plan de mejoras para el proyecto SGIC - RUEDAS DE ORO
 
-## Objetivo
+## 1. Objetivo
+Definir los cambios necesarios para corregir y mejorar el proyecto actual de gestión de vehículos y ventas, tomando en cuenta los archivos revisados: `main.c`, `funciones.c`, `funciones.h` y `vehiculos.txt`.
 
-Desarrollar un sistema en lenguaje C para gestionar el inventario de vehículos de la concesionaria Ruedas de Oro y registrar ventas con validaciones básicas de entrada.
+## 2. Estado actual
+- `main.c` contiene el menú principal y llama a las funciones del sistema.
+- `funciones.c` implementa la lectura de datos, validación de entrada, manejo de archivos y operaciones de registro/listado/búsqueda/venta.
+- `funciones.h` solo tiene parte de las firmas de funciones, falta declarar varias funciones usadas en `funciones.c`.
+- `vehiculos.txt` contiene datos de ejemplo con formato tabulado.
 
-## Funcionalidades
+## 3. Problemas y mejoras identificadas
+1. Prototipos incompletos en `funciones.h`.
+2. Validación de tipo de vehículo inconsistente: el mensaje de error menciona "auto" pero la validación solo acepta "sedan".
+3. Manejo de espacios en marca/modelo: se exige sin espacios, pero el dato de ejemplo `Land_cruiser` usa guión bajo. Esto está bien, pero debe documentarse o permitirse marcas con espacios.
+4. Lectura de archivos con `fscanf` y campos sin espacios es frágil; no maneja valores con espacios ni encabezados complejos.
+5. La función `generarId` reabre y lee `vehiculos.txt`; si el archivo no existe devuelve `1`, quizá debería devolver `1` cuando el archivo está vacío.
+6. El registro de venta cambia el archivo de vehículos usando un archivo temporal, pero no elimina `temporal.txt` en caso de error parcial.
+7. `buscarVehiculos()` obliga a ingresar marca, tipo y estado exactos; podría mejorarse con búsqueda flexible parcial o mayúsculas/minúsculas.
+8. No hay un listado de ventas ni comprobación de duplicados en ventas.
 
-- Agregar vehículos.
-- Listar vehículos.
-- Buscar vehículos.
-- Registrar ventas.
-- Validar la cédula del cliente al momento de registrar una venta.
+## 4. Plan de acciones
+1. Completar los prototipos faltantes en `funciones.h`.
+2. Ajustar la validación de tipo para aceptar `sedan`, `camioneta`, `SUV` y `suv`, y actualizar el mensaje de error para que sea coherente.
+3. Añadir validación de texto y/o permitir espacios en marca y modelo si es necesario.
+4. Mejorar lectura/escritura de archivos usando `fgets` + `sscanf` o separadores claros para evitar problemas con espacios y encabezados.
+5. Añadir manejo seguro cuando `vehiculos.txt` o `ventas.txt` no existen.
+6. Agregar una opción de menú para listar ventas o mostrar historial de ventas.
+7. Probar compilación con `gcc -Wall -Wextra` y ejecutar el programa con entradas de ejemplo.
+8. Documentar en `plan.md` los cambios realizados y dejar comentarios claros en el código.
 
-## Validaciones
+## 5. Prioridades
+- Alta: firmar correctamente las funciones en el header, corregir validaciones inconsistentes, asegurar que el archivo `vehiculos.txt` se manipula sin perder datos.
+- Media: mejorar la búsqueda y el registro de ventas, agregar listado de ventas.
+- Baja: refactorizar para soportar marcas/modelos con espacios y mejorar la experiencia de usuario.
 
-- Validar que solo se ingresen números donde corresponda.
-- No permitir campos vacíos.
-- Validar que el precio sea mayor a 0.
-- Validar que el tipo del vehículo sea Auto, Camioneta o SUV.
-- Validar que el estado sea Nuevo o Usado.
-- Validar que la cédula tenga 10 dígitos y sea válida.
-- Validar que la edad del cliente sea mayor a 0.
-
-## Archivos
-
-- main.c
-- funciones.c
-- funciones.h
-- vehiculos.txt
-- ventas.txt
-
-## Desarrollo
-
-- Revisar la estructura de datos para vehículos y clientes.
-- Crear el menú principal y las opciones del sistema.
-- Implementar el ingreso y validación de datos.
-- Guardar vehículos y ventas en archivos de texto.
-- Verificar búsquedas y registro de ventas.
-- Realizar pruebas con datos válidos e inválidos.
-- Corregir errores y mejorar mensajes de salida.
-
-## Secuencia de Trabajo
-
-1. Crear el menú principal.
-2. Registrar vehículos con validaciones.
-3. Listar vehículos almacenados.
-4. Buscar vehículos por criterios del cliente.
-5. Registrar ventas y desactivar disponibilidad.
-6. Validar cédula, edad y demás campos de cliente.
-7. Probar el sistema completo con archivos.
-
-## Resultado
-
-El programa permite administrar vehículos, realizar búsquedas según las preferencias del cliente y registrar ventas, manteniendo la información almacenada en archivos y aplicando validaciones de entrada.
-
-## Cambios a implementar
-
-- Archivos a modificar: `funciones.c` (principalmente) y opcionalmente `funciones.h` si se añaden helpers.
-- En `listarVehiculos()`: reemplazar los múltiples `printf` por una cabecera de tabla y una línea formateada por vehículo. Ejemplo:
-
-	printf("\n--- LISTA DE VEHICULOS ---\n");
-	printf("%-4s %-12s %-12s %-10s %-8s %-12s %-10s\n", "ID", "Marca", "Modelo", "Tipo", "Estado", "Precio", "Disponible");
-	printf("%-4d %-12s %-12s %-10s %-8s %-12.2f %-10s\n",
-				 v.id, v.marca, v.modelo, v.tipo, v.estado, v.precio,
-				 v.disponible == 1 ? "Si" : "No");
-
-- En `buscarVehiculos()`: imprimir una cabecera similar (solo con las columnas que desees mostrar) y usar el mismo formato para cada resultado encontrado. Imprime la cabecera solo si se encuentra al menos un vehículo.
-
-- Notas y pruebas:
-	- Ajusta los anchos (`%-12s`, `%-10s`, etc.) según los datos reales para evitar recortes.
-	- Mantener las validaciones actuales; solo cambia la forma de salida.
-	- Compilar y ejecutar para verificar salida:
-
-```bash
-gcc main.c funciones.c -o programa
-.\programa
-```
-
-Estos cambios mejoran la legibilidad al mostrar la lista y los resultados de búsqueda en formato tabular.
+## 6. Próximos pasos
+1. Actualizar `funciones.h` con todos los prototipos.
+2. Corregir `funciones.c` según los puntos anteriores.
+3. Compilar y corregir advertencias/errores.
+4. Probar manualmente las opciones del menú.
+5. Verificar que `vehiculos.txt` conserva los datos y que `ventas.txt` se genera correctamente.

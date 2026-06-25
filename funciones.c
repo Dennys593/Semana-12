@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "funciones.h"
 
 void limpiarBuffer() {
@@ -68,6 +69,36 @@ void leerTexto(char mensaje[], char texto[], int tam) {
     }
 }
 
+void leerTextoSinEspacios(char mensaje[], char texto[], int tam) {
+    int valido, i;
+    do {
+        leerTexto(mensaje, texto, tam);
+        valido = 1;
+        for (i = 0; texto[i] != '\0'; i++) {
+            if (texto[i] == ' ') {
+                printf("Error: no use espacios. Use guion bajo, ej: Land_Rover\n");
+                valido = 0;
+                break;
+            }
+        }
+    } while (valido == 0);
+}
+
+int leerAnio() {
+    int anio;
+    char mensaje[60];
+    sprintf(mensaje, "Anio del vehiculo (%d-%d): ", ANIO_MIN, ANIO_MAX);
+
+    do {
+        anio = leerEntero(mensaje);
+        if (anio < ANIO_MIN || anio > ANIO_MAX) {
+            printf("Error: ingrese un anio entre %d y %d.\n", ANIO_MIN, ANIO_MAX);
+        }
+    } while (anio < ANIO_MIN || anio > ANIO_MAX);
+
+    return anio;
+}
+
 int validarCedula(char cedula[]) {
     int i;
     int suma = 0;
@@ -128,7 +159,7 @@ void leerCedula(char mensaje[], char cedula[], int tam) {
 }
 
 int validarTipo(char tipo[]) {
-    if (strcmp(tipo, "auto") == 0 ||
+    if (strcmp(tipo, "sedan") == 0 ||
         strcmp(tipo, "camioneta") == 0 ||
         strcmp(tipo, "SUV") == 0 ||
         strcmp(tipo, "suv") == 0) {
@@ -149,10 +180,10 @@ int validarEstado(char estado[]) {
 
 void leerTipo(char tipo[]) {
     do {
-        leerTexto("Tipo camioneta/auto/SUV: ", tipo, MAX_TEXTO);
+        leerTexto("Tipo camioneta/sedan/SUV: ", tipo, MAX_TEXTO);
 
         if (validarTipo(tipo) == 0) {
-            printf("Error: tipo invalido. Ingrese solo camioneta, auto o SUV.\n");
+            printf("Error: tipo invalido. Ingrese solo camioneta, sedan o SUV.\n");
         }
 
     } while (validarTipo(tipo) == 0);
@@ -170,24 +201,30 @@ void leerEstado(char estado[]) {
 }
 
 void escribirEncabezadoVehiculos(FILE *archivo) {
-    fprintf(archivo, "%-5s %-15s %-15s %-15s %-10s %-12s %-5s\n",
-            "ID", "MARCA", "MODELO", "TIPO", "ESTADO", "PRECIO", "DISP");
+    fprintf(archivo, "%-5s %-15s %-15s %-6s %-12s %-8s %-12s %-5s\n",
+            "ID", "MARCA", "MODELO", "ANIO", "TIPO", "ESTADO", "PRECIO", "DISP");
 }
 
 void escribirVehiculo(FILE *archivo, Vehiculo v) {
-    fprintf(archivo, "%-5d %-15s %-15s %-15s %-10s %-12.2f %-5d\n",
-            v.id, v.marca, v.modelo, v.tipo,
+    fprintf(archivo, "%-5d %-15s %-15s %-6d %-12s %-8s %-12.2f %-5d\n",
+            v.id, v.marca, v.modelo, v.anio, v.tipo,
             v.estado, v.precio, v.disponible);
 }
 
 void escribirEncabezadoVentas(FILE *archivo) {
-    fprintf(archivo, "%-5s %-15s %-15s %-8s %-12s\n",
-            "ID", "CLIENTE", "CEDULA", "EDAD", "PRECIO");
+    fprintf(archivo, "%-5s %-15s %-12s %-5s %-10s %-15s %-12s %-10s %-14s %-10s\n",
+            "ID", "CLIENTE", "CEDULA", "EDAD", "COD_VEND", "VENDEDOR",
+            "PRECIO", "IVA", "PAGO_CLIENTE", "COMISION");
 }
 
-void escribirVenta(FILE *archivo, Cliente c, float precio) {
-    fprintf(archivo, "%-5d %-15s %-15s %-8d %-12.2f\n",
-            c.id, c.nombre, c.cedula, c.edad, precio);
+void escribirVenta(FILE *archivo, Cliente c, Vendedor vend, float precioBase) {
+    float iva = precioBase * IVA;
+    float pagoCliente = precioBase + iva;
+    float comision = precioBase * COMISION;
+
+    fprintf(archivo, "%-5d %-15s %-12s %-5d %-10s %-15s %-12.2f %-10.2f %-14.2f %-10.2f\n",
+            c.id, c.nombre, c.cedula, c.edad, vend.codigo, vend.nombre,
+            precioBase, iva, pagoCliente, comision);
 }
 
 int generarId() {
@@ -202,9 +239,9 @@ int generarId() {
 
     fgets(encabezado, 200, archivo);
 
-    while (fscanf(archivo, "%d %s %s %s %s %f %d",
-                  &v.id, v.marca, v.modelo, v.tipo,
-                  v.estado, &v.precio, &v.disponible) == 7) {
+    while (fscanf(archivo, "%d %s %s %d %s %s %f %d",
+                  &v.id, v.marca, v.modelo, &v.anio, v.tipo,
+                  v.estado, &v.precio, &v.disponible) == 8) {
         ultimoId = v.id;
     }
 
@@ -230,11 +267,12 @@ void agregarVehiculo() {
     v.id = generarId();
     v.disponible = 1;
 
-    leerTexto("Marca: ", v.marca, MAX_TEXTO);
-    leerTexto("Modelo: ", v.modelo, MAX_TEXTO);
+    leerTextoSinEspacios("Marca: ", v.marca, MAX_TEXTO);
+    leerTextoSinEspacios("Modelo: ", v.modelo, MAX_TEXTO);
+    v.anio = leerAnio();
     leerTipo(v.tipo);
     leerEstado(v.estado);
-    v.precio = leerFloat("Precio: ");
+    v.precio = leerFloat("Precio (sin puntos ni comas, ej: 120000): ");
 
     escribirVehiculo(archivo, v);
 
@@ -257,20 +295,18 @@ void listarVehiculos() {
     fgets(encabezado, 200, archivo);
 
     printf("\n--- LISTA DE VEHICULOS ---\n");
+    printf("%-4s %-12s %-12s %-6s %-10s %-8s %-12s %-6s\n",
+           "ID", "Marca", "Modelo", "Anio", "Tipo", "Estado", "Precio", "Disp");
 
-    while (fscanf(archivo, "%d %s %s %s %s %f %d",
-                  &v.id, v.marca, v.modelo, v.tipo,
-                  v.estado, &v.precio, &v.disponible) == 7) {
+    while (fscanf(archivo, "%d %s %s %d %s %s %f %d",
+                  &v.id, v.marca, v.modelo, &v.anio, v.tipo,
+                  v.estado, &v.precio, &v.disponible) == 8) {
 
         hayDatos = 1;
 
-        printf("\nID: %d", v.id);
-        printf("\nMarca: %s", v.marca);
-        printf("\nModelo: %s", v.modelo);
-        printf("\nTipo: %s", v.tipo);
-        printf("\nEstado: %s", v.estado);
-        printf("\nPrecio: %.2f", v.precio);
-        printf("\nDisponible: %s\n", v.disponible == 1 ? "Si" : "No");
+        printf("%-4d %-12s %-12s %-6d %-10s %-8s %-12.2f %-6s\n",
+               v.id, v.marca, v.modelo, v.anio, v.tipo, v.estado, v.precio,
+               v.disponible == 1 ? "Si" : "No");
     }
 
     if (hayDatos == 0) {
@@ -303,11 +339,9 @@ void buscarVehiculos() {
     leerEstado(estado);
     presupuesto = leerFloat("Presupuesto maximo: ");
 
-    printf("\n--- RESULTADOS DE BUSQUEDA ---\n");
-
-    while (fscanf(archivo, "%d %s %s %s %s %f %d",
-                  &v.id, v.marca, v.modelo, v.tipo,
-                  v.estado, &v.precio, &v.disponible) == 7) {
+    while (fscanf(archivo, "%d %s %s %d %s %s %f %d",
+                  &v.id, v.marca, v.modelo, &v.anio, v.tipo,
+                  v.estado, &v.precio, &v.disponible) == 8) {
 
         if (strcmp(v.marca, marca) == 0 &&
             strcmp(v.tipo, tipo) == 0 &&
@@ -315,12 +349,14 @@ void buscarVehiculos() {
             v.precio <= presupuesto &&
             v.disponible == 1) {
 
-            printf("\nID: %d", v.id);
-            printf("\nMarca: %s", v.marca);
-            printf("\nModelo: %s", v.modelo);
-            printf("\nTipo: %s", v.tipo);
-            printf("\nEstado: %s", v.estado);
-            printf("\nPrecio: %.2f\n", v.precio);
+            if (encontrados == 0) {
+                printf("\n--- RESULTADOS DE BUSQUEDA ---\n");
+                printf("%-4s %-12s %-12s %-6s %-10s %-8s %-12s\n",
+                       "ID", "Marca", "Modelo", "Anio", "Tipo", "Estado", "Precio");
+            }
+
+            printf("%-4d %-12s %-12s %-6d %-10s %-8s %-12.2f\n",
+                   v.id, v.marca, v.modelo, v.anio, v.tipo, v.estado, v.precio);
 
             encontrados++;
         }
@@ -340,6 +376,7 @@ void registrarVenta() {
 
     Vehiculo v;
     Cliente c;
+    Vendedor vend;
     int idBuscado;
     int encontrado = 0;
     char encabezado[200];
@@ -365,9 +402,9 @@ void registrarVenta() {
 
     idBuscado = leerEntero("Ingrese ID del vehiculo a vender: ");
 
-    while (fscanf(archivo, "%d %s %s %s %s %f %d",
-                  &v.id, v.marca, v.modelo, v.tipo,
-                  v.estado, &v.precio, &v.disponible) == 7) {
+    while (fscanf(archivo, "%d %s %s %d %s %s %f %d",
+                  &v.id, v.marca, v.modelo, &v.anio, v.tipo,
+                  v.estado, &v.precio, &v.disponible) == 8) {
 
         if (v.id == idBuscado && v.disponible == 1) {
             encontrado = 1;
@@ -382,11 +419,28 @@ void registrarVenta() {
                 c.edad = leerEntero("Edad del cliente: ");
             }
 
+            leerTextoSinEspacios("Codigo del vendedor (ej: V001): ", vend.codigo, MAX_TEXTO);
+            leerTextoSinEspacios("Nombre del vendedor (sin espacios, ej: Maria_Lopez): ", vend.nombre, MAX_TEXTO);
+
             c.id = idBuscado;
 
-            escribirVenta(ventas, c, v.precio);
+            escribirVenta(ventas, c, vend, v.precio);
 
-            printf("Venta registrada correctamente.\n");
+            float iva = v.precio * IVA;
+            float pagoCliente = v.precio + iva;
+            float comision = v.precio * COMISION;
+
+            printf("\nVenta registrada correctamente.\n");
+            printf("=====================================\n");
+            printf("Vehiculo:          %s %s %d\n", v.marca, v.modelo, v.anio);
+            printf("Cliente:           %s (CI: %s)\n", c.nombre, c.cedula);
+            printf("Vendedor:          %s (%s)\n", vend.nombre, vend.codigo);
+            printf("-------------------------------------\n");
+            printf("Precio base:       %.2f\n", v.precio);
+            printf("IVA (%.0f%%):         %.2f\n", IVA * 100, iva);
+            printf("PAGO DEL CLIENTE:  %.2f\n", pagoCliente);
+            printf("Comision vendedor: %.2f (%.0f%%)\n", comision, COMISION * 100);
+            printf("=====================================\n");
         }
 
         escribirVehiculo(temporal, v);
@@ -402,4 +456,164 @@ void registrarVenta() {
 
     remove("vehiculos.txt");
     rename("temporal.txt", "vehiculos.txt");
+}
+
+void reporteVentas() {
+    FILE *archivo = fopen("ventas.txt", "r");
+    char encabezado[300];
+    char linea[300];
+    int hayDatos = 0;
+    float totalRecaudado = 0;
+    float totalComisiones = 0;
+
+    if (archivo == NULL) {
+        printf("No hay ventas registradas.\n");
+        return;
+    }
+
+    fgets(encabezado, sizeof(encabezado), archivo);
+
+    while (fgets(linea, sizeof(linea), archivo) != NULL) {
+        char copia[300];
+        char *ultimos[4] = {NULL, NULL, NULL, NULL};
+        char *token;
+
+        if (linea[0] == '\n') {
+            continue;
+        }
+
+        if (hayDatos == 0) {
+            printf("\n--- REPORTE DE VENTAS ---\n");
+            printf("%s", encabezado);
+        }
+
+        hayDatos = 1;
+        printf("%s", linea);
+
+        /* Los ultimos 4 numeros de la linea son: PRECIO, IVA, PAGO_CLIENTE, COMISION.
+           Tomamos los ultimos 4 tokens para que los nombres con espacios no estorben. */
+        strcpy(copia, linea);
+        token = strtok(copia, " \t\n");
+        while (token != NULL) {
+            ultimos[0] = ultimos[1];
+            ultimos[1] = ultimos[2];
+            ultimos[2] = ultimos[3];
+            ultimos[3] = token;
+            token = strtok(NULL, " \t\n");
+        }
+
+        if (ultimos[2] != NULL && ultimos[3] != NULL) {
+            totalRecaudado += atof(ultimos[2]);
+            totalComisiones += atof(ultimos[3]);
+        }
+    }
+
+    if (hayDatos == 0) {
+        printf("No hay ventas registradas.\n");
+    } else {
+        printf("-------------------------------------------------------\n");
+        printf("Total recaudado (pago de clientes):  %.2f\n", totalRecaudado);
+        printf("Total comisiones a vendedores:       %.2f\n", totalComisiones);
+    }
+
+    fclose(archivo);
+}
+
+typedef struct {
+    char codigo[MAX_TEXTO];
+    char nombre[MAX_TEXTO];
+    int ventas;
+    float totalVendido;
+    float totalComision;
+} ResumenVendedor;
+
+void reporteComisiones() {
+    FILE *archivo = fopen("ventas.txt", "r");
+    char encabezado[300];
+    char linea[300];
+    ResumenVendedor vendedores[100];
+    int numVendedores = 0;
+    int i, hayDatos = 0;
+
+    if (archivo == NULL) {
+        printf("No hay ventas registradas.\n");
+        return;
+    }
+
+    fgets(encabezado, sizeof(encabezado), archivo);
+
+    while (fgets(linea, sizeof(linea), archivo) != NULL) {
+        char copia[300];
+        char *tok[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+        char *token;
+        int k, encontrado;
+        float precio, comision;
+
+        if (linea[0] == '\n') {
+            continue;
+        }
+
+        /* Tomamos los ultimos 6 tokens de la linea:
+           COD_VEND, VENDEDOR, PRECIO, IVA, PAGO_CLIENTE, COMISION.
+           (Por eso el nombre del vendedor no debe llevar espacios.) */
+        strcpy(copia, linea);
+        token = strtok(copia, " \t\n");
+        while (token != NULL) {
+            for (k = 0; k < 5; k++) {
+                tok[k] = tok[k + 1];
+            }
+            tok[5] = token;
+            token = strtok(NULL, " \t\n");
+        }
+
+        if (tok[0] == NULL || tok[5] == NULL) {
+            continue;
+        }
+
+        precio = atof(tok[2]);
+        comision = atof(tok[5]);
+        hayDatos = 1;
+
+        encontrado = -1;
+        for (i = 0; i < numVendedores; i++) {
+            if (strcmp(vendedores[i].codigo, tok[0]) == 0) {
+                encontrado = i;
+                break;
+            }
+        }
+
+        if (encontrado == -1 && numVendedores < 100) {
+            encontrado = numVendedores;
+            strcpy(vendedores[numVendedores].codigo, tok[0]);
+            strcpy(vendedores[numVendedores].nombre, tok[1]);
+            vendedores[numVendedores].ventas = 0;
+            vendedores[numVendedores].totalVendido = 0;
+            vendedores[numVendedores].totalComision = 0;
+            numVendedores++;
+        }
+
+        if (encontrado >= 0) {
+            vendedores[encontrado].ventas++;
+            vendedores[encontrado].totalVendido += precio;
+            vendedores[encontrado].totalComision += comision;
+        }
+    }
+
+    fclose(archivo);
+
+    if (hayDatos == 0) {
+        printf("No hay ventas registradas.\n");
+        return;
+    }
+
+    printf("\n--- COMISIONES POR VENDEDOR ---\n");
+    printf("%-10s %-15s %-8s %-15s %-15s\n",
+           "CODIGO", "VENDEDOR", "VENTAS", "TOTAL_VEND", "TOTAL_COMIS");
+
+    for (i = 0; i < numVendedores; i++) {
+        printf("%-10s %-15s %-8d %-15.2f %-15.2f\n",
+               vendedores[i].codigo, vendedores[i].nombre,
+               vendedores[i].ventas, vendedores[i].totalVendido,
+               vendedores[i].totalComision);
+    }
 }

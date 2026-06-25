@@ -10,7 +10,9 @@ int main() {
         printf("2. Listar vehiculos\n");
         printf("3. Buscar vehiculos\n");
         printf("4. Registrar venta\n");
-        printf("5. Salir\n");
+        printf("5. Reporte de ventas\n");
+        printf("6. Comisiones por vendedor\n");
+        printf("7. Salir\n");
 
         opcion = leerEntero("Seleccione una opcion >> ");
 
@@ -28,13 +30,19 @@ int main() {
                 registrarVenta();
                 break;
             case 5:
+                reporteVentas();
+                break;
+            case 6:
+                reporteComisiones();
+                break;
+            case 7:
                 printf("Salio del sistema\n");
                 break;
             default:
-                printf("Opcion invalida. Ingrese una opcion del 1 al 5.\n");
+                printf("Opcion invalida. Ingrese una opcion del 1 al 7.\n");
         }
 
-    } while (opcion != 5);
+    } while (opcion != 7);
 
     return 0;
 }

@@ -1,3 +1,5 @@
-ID    MARCA           MODELO          TIPO            ESTADO     PRECIO       DISP 
-1     Kia             Sportague       auto            nuevo      12000.00     1    
-2     Toyota          Corrollo        camioneta       usado      8000.00      1    
+ID    MARCA           MODELO          ANIO   TIPO         ESTADO   PRECIO       DISP 
+1     Ford            Sus             2000   sedan        nuevo    20000.00     1    
+2     Ford            RaptorR         2027   camioneta    nuevo    150000.00    0    
+3     Porsche         Cayenne         2027   sedan        nuevo    120000.00    1    
+4     Toyota          4Runner         2027   camioneta    nuevo    150000.00    0    

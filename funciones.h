@@ -15,6 +15,7 @@ typedef struct {
 typedef struct {
     int id;
     char nombre[MAX_TEXTO];
+    char cedula[MAX_TEXTO];
     int edad;
 } Cliente;
 
@@ -22,6 +23,8 @@ void limpiarBuffer();
 int leerEntero(char mensaje[]);
 float leerFloat(char mensaje[]);
 void leerTexto(char mensaje[], char texto[], int tam);
+int validarCedula(char cedula[]);
+void leerCedula(char mensaje[], char cedula[], int tam);
 
 void agregarVehiculo();
 void listarVehiculos();

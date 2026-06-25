@@ -68,6 +68,107 @@ void leerTexto(char mensaje[], char texto[], int tam) {
     }
 }
 
+int validarCedula(char cedula[]) {
+    int i;
+    int suma = 0;
+    int digitoVerificador;
+    int provincia;
+
+    if (strlen(cedula) != 10) {
+        return 0;
+    }
+
+    for (i = 0; i < 10; i++) {
+        if (cedula[i] < '0' || cedula[i] > '9') {
+            return 0;
+        }
+    }
+
+    provincia = (cedula[0] - '0') * 10 + (cedula[1] - '0');
+
+    if (provincia < 1 || provincia > 24) {
+        return 0;
+    }
+
+    if (cedula[2] >= '6') {
+        return 0;
+    }
+
+    for (i = 0; i < 9; i++) {
+        int digito = cedula[i] - '0';
+
+        if (i % 2 == 0) {
+            digito *= 2;
+            if (digito > 9) {
+                digito -= 9;
+            }
+        }
+
+        suma += digito;
+    }
+
+    digitoVerificador = 10 - (suma % 10);
+
+    if (digitoVerificador == 10) {
+        digitoVerificador = 0;
+    }
+
+    return digitoVerificador == (cedula[9] - '0');
+}
+
+void leerCedula(char mensaje[], char cedula[], int tam) {
+    do {
+        leerTexto(mensaje, cedula, tam);
+
+        if (validarCedula(cedula) == 0) {
+            printf("Error: cedula invalida. Ingrese una cedula ecuatoriana valida.\n");
+        }
+
+    } while (validarCedula(cedula) == 0);
+}
+
+int validarTipo(char tipo[]) {
+    if (strcmp(tipo, "auto") == 0 ||
+        strcmp(tipo, "camioneta") == 0 ||
+        strcmp(tipo, "SUV") == 0 ||
+        strcmp(tipo, "suv") == 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
+int validarEstado(char estado[]) {
+    if (strcmp(estado, "nuevo") == 0 ||
+        strcmp(estado, "usado") == 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
+void leerTipo(char tipo[]) {
+    do {
+        leerTexto("Tipo camioneta/auto/SUV: ", tipo, MAX_TEXTO);
+
+        if (validarTipo(tipo) == 0) {
+            printf("Error: tipo invalido. Ingrese solo camioneta, auto o SUV.\n");
+        }
+
+    } while (validarTipo(tipo) == 0);
+}
+
+void leerEstado(char estado[]) {
+    do {
+        leerTexto("Estado nuevo/usado: ", estado, MAX_TEXTO);
+
+        if (validarEstado(estado) == 0) {
+            printf("Error: estado invalido. Ingrese solo nuevo o usado.\n");
+        }
+
+    } while (validarEstado(estado) == 0);
+}
+
 int generarId() {
     FILE *archivo = fopen("vehiculos.txt", "r");
     Vehiculo v;
@@ -101,8 +202,8 @@ void agregarVehiculo() {
 
     leerTexto("Marca: ", v.marca, MAX_TEXTO);
     leerTexto("Modelo: ", v.modelo, MAX_TEXTO);
-    leerTexto("Tipo camioneta/auto/SUV: ", v.tipo, MAX_TEXTO);
-    leerTexto("Estado nuevo/usado: ", v.estado, MAX_TEXTO);
+    leerTipo(v.tipo);
+    leerEstado(v.estado);
     v.precio = leerFloat("Precio: ");
 
     fprintf(archivo, "%d %s %s %s %s %.2f %d\n",
@@ -164,8 +265,8 @@ void buscarVehiculos() {
     }
 
     leerTexto("Marca buscada: ", marca, MAX_TEXTO);
-    leerTexto("Tipo buscado: ", tipo, MAX_TEXTO);
-    leerTexto("Estado buscado: ", estado, MAX_TEXTO);
+    leerTipo(tipo);
+    leerEstado(estado);
     presupuesto = leerFloat("Presupuesto maximo: ");
 
     printf("\n--- RESULTADOS DE BUSQUEDA ---\n");
@@ -210,6 +311,11 @@ void registrarVenta() {
 
     if (archivo == NULL || temporal == NULL || ventas == NULL) {
         printf("Error al abrir archivos.\n");
+
+        if (archivo != NULL) fclose(archivo);
+        if (temporal != NULL) fclose(temporal);
+        if (ventas != NULL) fclose(ventas);
+
         return;
     }
 
@@ -224,6 +330,7 @@ void registrarVenta() {
             v.disponible = 0;
 
             leerTexto("Nombre del cliente: ", c.nombre, MAX_TEXTO);
+            leerCedula("Cedula del cliente: ", c.cedula, MAX_TEXTO);
             c.edad = leerEntero("Edad del cliente: ");
 
             while (c.edad <= 0) {
@@ -233,8 +340,8 @@ void registrarVenta() {
 
             c.id = idBuscado;
 
-            fprintf(ventas, "%d %s %d %.2f\n",
-                    c.id, c.nombre, c.edad, v.precio);
+                fprintf(ventas, "%d %s %s %d %.2f\n",
+                    c.id, c.nombre, c.cedula, c.edad, v.precio);
 
             printf("Venta registrada correctamente.\n");
         }

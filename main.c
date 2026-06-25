@@ -11,9 +11,8 @@ int main() {
         printf("3. Buscar vehiculos\n");
         printf("4. Registrar venta\n");
         printf("5. Salir\n");
-        printf("Seleccione una opcion >> ");
-        scanf("%d", &opcion);
-        limpiarBuffer();
+
+        opcion = leerEntero("Seleccione una opcion >> ");
 
         switch (opcion) {
             case 1:
@@ -32,7 +31,7 @@ int main() {
                 printf("Salio del sistema\n");
                 break;
             default:
-                printf("Opcion invalida.\n");
+                printf("Opcion invalida. Ingrese una opcion del 1 al 5.\n");
         }
 
     } while (opcion != 5);
